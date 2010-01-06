@@ -68,8 +68,31 @@ class Editor::Tags::Parser::Static::PPI
         $doc->find( sub {
             my ($top, $token) = @_;
 
-            if( $token->isa('PPI::Statement::Package')){
-                $package = $token->namespace;
+            if( $token->isa('PPI::Statement::Package')
+                  || ( $token->isa('PPI::Token::Word') &&
+                       $token->literal ~~ [qw/class role/]
+                     )){
+                my $defn;
+                if( $token->can('namespace') ) {
+                    $package = $token->namespace;
+                    $defn = $token->content;
+                }
+                else {
+                    $package = $token->snext_sibling->literal;
+                    $defn = $token->literal. $token->next_sibling->content. $token->next_sibling->next_sibling->literal;
+                }
+                my ($line, $offset) = @{$token->location};
+                push @result, Editor::Tags::Tag->new(
+                    associated_file => $self->file,
+                    name            => $package,
+                    definition      => $defn,
+                    line            => $line,
+                    offset          => $offset,
+                    extra_info      => {
+                        kind => 'package',
+                        file => 1,
+                    },
+                );
             }
             elsif( $token->isa('PPI::Statement::Sub') ){
                 my $sub = $token;
@@ -123,11 +146,6 @@ class Editor::Tags::Parser::Static::PPI
                         },
                     );
                 }
-            }
-            elsif(  $token->isa('PPI::Token::Word') &&
-                  # also before/after/around/inner?
-                  $token->literal ~~ [qw/class role/]){
-                $package = $token->snext_sibling->literal;
             }
         });
 
