@@ -45,8 +45,7 @@ class Editor::Tags::File::CTags with Editor::Tags::File {
 
     method build_formatted_tag(ClassName|Object $class: Tag $tag) {
         my $pattern = $tag->address_pattern;
-        my $result = join "\t", $tag->name, $tag->associated_file, qq{$pattern;"},
-          map { join ':', $_, $tag->extra_info->{$_} } grep { $tag->extra_info->{$_} } keys %{$tag->extra_info};
+        my $result = join "\t", $tag->name, $tag->associated_file, qq{$pattern};
         return "$result\n";
     }
 }

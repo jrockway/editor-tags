@@ -3,7 +3,7 @@ use MooseX::Declare;
 class Editor::Tags::Script::MakeTags with (MooseX::Runnable, MooseX::Getopt) {
     use MooseX::FileAttribute;
 
-    use feature 'say';
+    use feature qw/say switch/;
 
     has_file 'output' => (
         documentation => 'file to write tags data to (defaults to "TAGS" for etags or "tags" for ctags)',
@@ -33,12 +33,18 @@ class Editor::Tags::Script::MakeTags with (MooseX::Runnable, MooseX::Getopt) {
 
     method _build_output_class {
         my $format = $self->format;
-        if ($format =~ /emacs|etags/i){
-            $format = 'ETags';
+        given($format){
+            when(/^(emacs|etags)$/i){
+                $format = 'ETags';
+            }
+            when(/^(vim?|ctags)$/i){
+                $format = 'CTags';
+            }
+            when(/^exuberant$/i){
+                $format = 'ExuberantCTags';
+            }
         }
-        elsif ($format =~ /vim?|ctags/i) {
-            $format = 'CTags';
-        }
+
         my $format_class = sprintf('Editor::Tags::File::%s', $format);
         Class::MOP::load_class($format_class);
         return $format_class;
