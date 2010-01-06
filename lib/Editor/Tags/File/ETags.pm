@@ -3,6 +3,8 @@ use MooseX::Declare;
 class Editor::Tags::File::ETags with Editor::Tags::File {
     use MooseX::Types::Path::Class qw(File);
 
+    method _build_filename { 'TAGS' }
+
     method new_from_file(File $filename? does coerce){
         die 'not implemented';
     }

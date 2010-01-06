@@ -6,8 +6,8 @@ class Editor::Tags::Script::MakeTags with (MooseX::Runnable, MooseX::Getopt) {
     use feature 'say';
 
     has_file 'output' => (
-        default       => 'TAGS',
-        documentation => 'file to write tags data to',
+        documentation => 'file to write tags data to (defaults to "TAGS" for etags or "tags" for ctags)',
+        predicate     => 'has_output_file',
     );
 
     has 'format' => (
@@ -44,9 +44,14 @@ class Editor::Tags::Script::MakeTags with (MooseX::Runnable, MooseX::Getopt) {
     }
 
     method _get_output_instance {
-        return $self->output_class->new(
-            file => $self->output,
-        );
+        if($self->has_output_file){
+            return $self->output_class->new(
+                tags_file => $self->output,
+            );
+        }
+        else {
+            return $self->output_class->new;
+        }
     }
 
     method _get_parser_instance($file) {

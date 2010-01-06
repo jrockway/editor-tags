@@ -4,7 +4,7 @@ role Editor::Tags::File with Editor::Tags::Collection {
     use MooseX::FileAttribute;
 
     has_file 'tags_file' => (
-        default => 'TAGS',
+        builder => '_build_filename',
     );
 
     requires 'new_from_file';
