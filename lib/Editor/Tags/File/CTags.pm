@@ -5,7 +5,7 @@ class Editor::Tags::File::CTags with Editor::Tags::File {
     use Editor::Tags::Types qw(Tag);
     use MooseX::Types::Path::Class qw(File);
 
-    my $have_exuberant = eval { require Parse::ExuberantCTags };
+    my $have_exuberant = eval { require Parse::ExuberantCTags; 1 };
 
     method _build_filename { 'tags' }
 
@@ -16,8 +16,18 @@ class Editor::Tags::File::CTags with Editor::Tags::File {
             my $parser = Parse::ExuberantCTags->new( $file->stringify );
             my $tag;
             while ( defined ( $tag = $parser->nextTag ) ){
-                use DDS;
-                warn Dump($tag);
+                $tag->{extension}{file} = $tag->{fileScope} if exists $tag->{fileScope};
+                $tag->{extension}{kind} = $tag->{kind}      if exists $tag->{kind};
+
+                $self->add_tag(
+                    Editor::Tags::Tag->new(
+                        associated_file => $tag->{file},
+                        name            => $tag->{name},
+                        address_pattern => $tag->{addressPattern},
+                        extra_info      => $tag->{extension},
+                        ($tag->{addressLineNumber} ? (line => $tag->{addressLineNumber}) : ()),
+                    ),
+                );
             }
         }
         else {
@@ -27,7 +37,7 @@ class Editor::Tags::File::CTags with Editor::Tags::File {
 
                 my $line_no = Scalar::Util::looks_like_number($search) ? $search : 0;
                 my $definition = ($search =~ m{^/[\^](.+)\$?/$}) ? $1 : $search;
-                warn "$name $tag_file $search $line_no $definition";
+
                 $self->add_tag(
                     Editor::Tags::Tag->new(
                         associated_file => $tag_file,

@@ -9,16 +9,22 @@ class Editor::Tags::Tag {
         required => 1,
     );
 
-    has [qw/name definition/] => (
+    has 'name' => (
         is       => 'ro',
         isa      => Str,
         required => 1,
     );
 
+    has 'definition' => (
+        is         => 'ro',
+        isa        => Str,
+        lazy_build => 1,
+    );
+
     has [qw/line offset/] => (
-        is       => 'ro',
-        isa      => Int,
-        required => 1,
+        is      => 'ro',
+        isa     => Int,
+        default => 0,
     );
 
     has 'address_pattern' => (
@@ -28,15 +34,24 @@ class Editor::Tags::Tag {
     );
 
     method _build_address_pattern {
-        if (my $def = $self->definition) {
-            return "/^$def/";
+        if ($self->has_definition) {
+            return "/^". $self->definition. "/";
         }
         elsif (my $line = $self->line) {
             return $line;
         }
-        else {
-            return '';
+
+        return '';
+    }
+
+    method _build_definition {
+        if ($self->has_address_pattern){
+            my $p = $self->address_pattern;
+            $p =~ s{^/\^}{};
+            $p =~ s{\$?/$}{};
+            return $p;
         }
+        return '';
     }
 
     has 'extra_info' => (
