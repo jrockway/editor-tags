@@ -49,14 +49,21 @@ class Editor::Tags::Script::MakeTags with (MooseX::Runnable, MooseX::Getopt) {
         );
     }
 
+    method _get_parser_instance($file) {
+        $self->parser_class->new_from_file($file);
+    }
+
     method run(@files) {
         my $output = $self->_get_output_instance;
+        local $| = 1;
 
         for my $file (@files){
-            say "Parsing $file...";
-            $output->add_tags(
-                $self->parser_class->new_from_file($file)->tags,
-            );
+            print "$file...";
+            my $parser = $self->_get_parser_instance($file);
+            my @tags = $parser->tags;
+            $output->add_tags( @tags );
+            print scalar @tags;
+            say ".";
         }
 
         $output->write_file;
