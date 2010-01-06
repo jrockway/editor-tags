@@ -4,4 +4,10 @@ use strict;
 name 'Editor-Tags';
 all_from 'lib/Editor/Tags/File.pm';
 
+requires 'MooseX::FileAttribute';
+requires 'MooseX::Declare';
+requires 'MooseX::Types::Structured';
+requires 'PPI';
+requires 'Set::Object';
+
 WriteAll;
