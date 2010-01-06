@@ -40,7 +40,7 @@ class Editor::Tags::Tag {
     }
 
     method to_ctag {
-        die 'ctags not implemented';
-        return join "\t", $self->name, $self->associated_file, '[EX COMMAND];"', %{$self->extra_info};
+        my $definition = $self->definition;
+        return join "\t", $self->name, $self->associated_file, qq{/^$definition/};#, %{$self->extra_info};
     }
 }
