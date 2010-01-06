@@ -32,7 +32,14 @@ class Editor::Tags::Script::MakeTags with (MooseX::Runnable, MooseX::Getopt) {
     );
 
     method _build_output_class {
-        my $format_class = sprintf('Editor::Tags::File::%s', $self->format);
+        my $format = $self->format;
+        if ($format =~ /emacs|etags/i){
+            $format = 'ETags';
+        }
+        elsif ($format =~ /vim?|ctags/i) {
+            $format = 'CTags';
+        }
+        my $format_class = sprintf('Editor::Tags::File::%s', $format);
         Class::MOP::load_class($format_class);
         return $format_class;
     }
