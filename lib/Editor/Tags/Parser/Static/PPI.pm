@@ -11,6 +11,7 @@ class Editor::Tags::Parser::Static::PPI
     use Editor::Tags::Types qw(Tag);
 
     use PPI;
+    use Tie::File;
 
     use 5.010;
 
@@ -38,6 +39,13 @@ class Editor::Tags::Parser::Static::PPI
         lazy_build => 1,
     );
 
+    method new_tag(@args) {
+        return Editor::Tags::Tag->new(
+            associated_file => $self->file,
+            @args,
+        );
+    }
+
     method _build_document {
         return PPI::Document->new( $self->file->stringify );
     }
@@ -52,72 +60,76 @@ class Editor::Tags::Parser::Static::PPI
 
     method _build_methods {
         my $doc = $self->document;
-        my @result;
-
-        my @methods;
-        $doc->find( sub {
-            my ($top, $elt) = @_;
-            return 0 unless $elt->isa('PPI::Token::Word');
-            return 0 unless $elt->literal ~~ [qw/method override/]; # also before/after/around/inner?
-            my $name = $next_nonwhitespace->($elt);
-            my $proto_or_block = $next_nonwhitespace->($name);
-            my ($proto, $block);
-            if ($proto_or_block->isa('PPI::Structure::List')) {
-                $proto = $proto_or_block;
-                $block = $next_nonwhitespace->($proto_or_block);
-            }
-            else {
-                $block = $proto_or_block;
-            }
-            return 0 unless $block->isa('PPI::Structure::Block');
-
-            push @methods, [ $elt->literal, $name->literal, @{$name->location}[0,1], (defined $proto ? $proto : ''), $elt ];
-            return $elt;
-        });
-
-        use Tie::File;
         tie my @file , 'Tie::File' , $self->file->stringify;
 
-        for my $method (@methods) {
-            my ($type, $name, $line, $offset, $proto, $elt) = @$method;
+        my @result;
 
-            my $tag = Editor::Tags::Tag->new(
-                associated_file => $self->file,
-                name            => $name,
-                definition      => substr ($file[$line-1], 0, $offset + length($name) - 1),
-                line            => $line,
-                offset          => $offset,
-                extra_info      => {
-                    access    => ($name =~ /^_/ ? 'private' : 'public'),
-                    signature => eval { $proto->literal } || '',
-                    kind      => $type,
-                    file      => 1,
-                },
-            );
+        my $package;
+        $doc->find( sub {
+            my ($top, $token) = @_;
 
-            push @result, $tag;
-        }
+            if( $token->isa('PPI::Statement::Package')){
+                $package = $token->namespace;
+            }
+            elsif( $token->isa('PPI::Statement::Sub') ){
+                my $sub = $token;
+                my ($line, $offset) = @{$sub->location};
+                my $name = $sub->name;
+                my $tag = Editor::Tags::Tag->new(
+                    associated_file => $self->file,
+                    name            => "${package}::$name",
+                    definition      => substr ($file[$line-1], 0, $offset + 4 + length($name) - 1),
+                    line            => $line,
+                    offset          => $offset,
+                    extra_info      => {
+                        access    => 'sub',
+                        signature => $sub->prototype || '',
+                        kind      => 'sub',
+                        file      => 1,
+                    },
+                );
 
-        my @subs = @{$doc->find('PPI::Statement::Sub')||[]};
-        for my $sub (@subs) {
-            my ($line, $offset) = @{$sub->location};
-            my $name = $sub->name;
-            my $tag = Editor::Tags::Tag->new(
-                associated_file => $self->file,
-                name            => $name,
-                definition      => substr ($file[$line-1], 0, $offset + 4 + length($name) - 1),
-                line            => $line,
-                offset          => $offset,
-                extra_info      => {
-                    access    => 'sub',
-                    signature => $sub->prototype || '',
-                    kind      => 'sub',
-                    file      => 1,
-                },
-            );
+                push @result, $tag;
 
-            push @result, $tag;
-        }
+            }
+
+            elsif( $token->isa('PPI::Token::Word') &&
+                  # also before/after/around/inner?
+                  $token->literal ~~ [qw/method override/]){
+                my $elt = $token;
+                my $name = $next_nonwhitespace->($elt);
+                my $proto_or_block = $next_nonwhitespace->($name);
+                my ($proto, $block);
+                if ($proto_or_block->isa('PPI::Structure::List')) {
+                    $proto = $proto_or_block;
+                    $block = $next_nonwhitespace->($proto_or_block);
+                }
+                else {
+                    $block = $proto_or_block;
+                }
+
+                if($block->isa('PPI::Structure::Block')){
+                    my ($line, $offset) = @{$name->location};
+                    push @result, $self->new_tag(
+                        name            => "${package}::". $name->literal,
+                        definition      => substr ($file[$line-1], 0, $offset + length($name->literal) - 1),
+                        line            => $line,
+                        offset          => $offset,
+                        extra_info      => {
+                            access    => ($name->literal =~ /^_/ ? 'private' : 'public'),
+                            signature => eval { $proto->literal } || '',
+                            kind      => $elt->literal,
+                            file      => 1,
+                        },
+                    );
+                }
+            }
+            elsif(  $token->isa('PPI::Token::Word') &&
+                  # also before/after/around/inner?
+                  $token->literal ~~ [qw/class role/]){
+                $package = $token->snext_sibling->literal;
+            }
+        });
 
         return \@result;
     }
