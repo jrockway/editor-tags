@@ -75,8 +75,6 @@ class Editor::Tags::Parser::Static::PPI
             return $elt;
         });
 
-        my @subs = $doc->find('PPI::Statement::Sub');
-
         use Tie::File;
         tie my @file , 'Tie::File' , $self->file->stringify;
 
@@ -93,6 +91,27 @@ class Editor::Tags::Parser::Static::PPI
                     access    => ($name =~ /^_/ ? 'private' : 'public'),
                     signature => eval { $proto->literal } || '',
                     kind      => $type,
+                    file      => 1,
+                },
+            );
+
+            push @result, $tag;
+        }
+
+        my @subs = @{$doc->find('PPI::Statement::Sub')||[]};
+        for my $sub (@subs) {
+            my ($line, $offset) = @{$sub->location};
+            my $name = $sub->name;
+            my $tag = Editor::Tags::Tag->new(
+                associated_file => $self->file,
+                name            => $name,
+                definition      => substr ($file[$line-1], 0, $offset + 4 + length($name) - 1),
+                line            => $line,
+                offset          => $offset,
+                extra_info      => {
+                    access    => 'sub',
+                    signature => $sub->prototype || '',
+                    kind      => 'sub',
                     file      => 1,
                 },
             );
