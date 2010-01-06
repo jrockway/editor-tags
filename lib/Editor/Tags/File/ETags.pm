@@ -32,9 +32,9 @@ class Editor::Tags::File::ETags with Editor::Tags::File {
 
     method build_file_contents {
         my $result;
-        for my $file ($self->list_files){
+        for my $file (sort $self->list_files){
             my $file_data;
-            for my $tag (@{$self->get_file_tags($file)}){
+            for my $tag (sort { $a->line <=> $b->line } @{$self->get_file_tags($file)}){
                 $file_data .= $tag->to_etag . "\n";
             }
 

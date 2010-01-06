@@ -12,10 +12,6 @@ role Editor::Tags::Collection {
         isa        => 'Set::Object',
         required   => 1,
         default    => sub { Set::Object->new },
-        trigger    => sub {
-            my $self = shift;
-            $self->_clear_file_tag_map;
-        },
         handles => {
             add_tag    => 'insert',
             remove_tag => 'delete',
@@ -24,7 +20,7 @@ role Editor::Tags::Collection {
     );
 
     before add_tag(Tag $tag){
-        return; # only here for type validation
+        $self->clear_file_tag_map;
     }
 
     has 'file_tag_map' => (
@@ -55,5 +51,6 @@ role Editor::Tags::Collection {
 
     method forget_file(Str $filename){
         $self->remove_tag($_) for @{$self->get_file_tags($filename)};
+        $self->clear_file_tag_map;
     }
 }

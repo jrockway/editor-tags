@@ -30,11 +30,8 @@ class Editor::Tags::File::CTags with Editor::Tags::File {
 
     method build_file_contents {
         my $result;
-        for my $file ($self->list_files){
-            my $file_data;
-            for my $tag (@{$self->get_file_tags($file)}){
-                $result .= $tag->to_ctag . "\n";
-            }
+        for my $tag (sort { $a->line <=> $b->line } @{$self->tags}){
+            $result .= $tag->to_ctag . "\n";
         }
         return $result;
     }
