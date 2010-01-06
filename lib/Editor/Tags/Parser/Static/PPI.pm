@@ -1,6 +1,6 @@
 use MooseX::Declare;
 
-class Editor::Tags::Generate::Static::PPI
+class Editor::Tags::Parser::Static::PPI
   with (Editor::Tags::Parser::FromFile) {
     use MooseX::FileAttribute;
     use MooseX::Types::Path::Class qw(File);
