@@ -21,6 +21,24 @@ class Editor::Tags::Tag {
         required => 1,
     );
 
+    has 'address_pattern' => (
+        is         => 'ro',
+        isa        => 'Str',
+        lazy_build => 1,
+    );
+
+    method _build_address_pattern {
+        if (my $def = $self->definition) {
+            return "/^$def/";
+        }
+        elsif (my $line = $self->line) {
+            return $line;
+        }
+        else {
+            return '';
+        }
+    }
+
     has 'extra_info' => (
         is => 'ro',
         isa => Dict[
@@ -34,13 +52,4 @@ class Editor::Tags::Tag {
         required => 1,
         default  => sub { +{} },
     );
-
-    method to_etag {
-        return $self->definition . "\x{7f}". $self->name. "\x{01}". $self->line. ','. $self->offset;
-    }
-
-    method to_ctag {
-        my $definition = $self->definition;
-        return join "\t", $self->name, $self->associated_file, qq{/^$definition/};#, %{$self->extra_info};
-    }
 }

@@ -1,7 +1,8 @@
 use MooseX::Declare;
 
-class Editor::Tags::File::ETags with Editor::Tags::File {
+class Editor::Tags::File::ETags {
     use Editor::Tags::Tag;
+    use Editor::Tags::Types qw(Tag);
     use MooseX::Types::Path::Class qw(File);
 
     method _build_filename { 'TAGS' }
@@ -30,18 +31,15 @@ class Editor::Tags::File::ETags with Editor::Tags::File {
         return $self;
     }
 
-    method build_file_contents {
-        my $result;
-        for my $file (sort $self->list_files){
-            my $file_data;
-            for my $tag (sort { $a->line <=> $b->line } @{$self->get_file_tags($file)}){
-                $file_data .= $tag->to_etag . "\n";
-            }
+    method build_formatted_tag(ClassName|Object $class: Tag $tag){
+        my $result = $tag->definition . "\x{7f}". $tag->name. "\x{01}". $tag->line. ','. $tag->offset;
+        return "$result\n";
+    }
 
-            $result .= "\x0c\n";
-            $result .= "$file,". length($file_data). "\n";
-            $result .= $file_data;
-        }
-        return $result;
+    with 'Editor::Tags::File';
+
+    around build_one_file_block(Str $file){
+        my $block = $self->$orig($file);
+        return "\x0c\n$file,". length($block)."\n$block";
     }
 }
