@@ -53,4 +53,10 @@ role Editor::Tags::Collection {
         $self->remove_tag($_) for @{$self->get_file_tags($filename)};
         $self->clear_file_tag_map;
     }
+
+    method find_tag(Str $name){
+        for my $tag ($self->tags){
+            return $tag if $tag->name eq $name;
+        }
+    }
 }
