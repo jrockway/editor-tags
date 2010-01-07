@@ -23,17 +23,25 @@ role Editor::Tags::File with Editor::Tags::Collection {
         $tags->close;
     }
 
+    method get_sorted_files {
+        return sort $self->list_files;
+    }
+
     method build_file_contents() {
         my $result;
-        for my $file (sort $self->list_files){
+        for my $file ($self->get_sorted_files){
             $result .= $self->build_one_file_block($file);
         }
         return $result;
     }
 
+    method get_sorted_tags_for(Str $file) {
+        return sort { $a->line <=> $b->line } @{$self->get_file_tags($file)};
+    }
+
     method build_one_file_block(Str $file) {
         my $result;
-        for my $tag (sort { $a->line <=> $b->line } @{$self->get_file_tags($file)}){
+        for my $tag ($self->get_sorted_tags_for($file)){
             $result .= $self->build_formatted_tag($tag);
         }
         return $result;

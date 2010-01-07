@@ -50,6 +50,12 @@ class Editor::Tags::File::CTags with Editor::Tags::File {
         }
     }
 
+    # CTags does not preserve line numbering, so sort by something
+    # else (for predictable round-tripping)
+    method get_sorted_tags_for(Str $file) {
+        return sort { $a->name cmp $b->name } @{$self->get_file_tags($file)};
+    }
+
     method build_formatted_tag(ClassName|Object $class: Tag $tag) {
         my $pattern = $tag->address_pattern;
         my $result = join "\t", $tag->name, $tag->associated_file, qq{$pattern};
