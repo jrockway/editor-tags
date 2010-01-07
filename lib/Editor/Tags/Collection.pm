@@ -50,7 +50,7 @@ role Editor::Tags::Collection {
     }
 
     method forget_file(Str $filename){
-        $self->remove_tag($_) for @{$self->get_file_tags($filename)};
+        $self->remove_tag($_) for @{$self->get_file_tags($filename) || []};
         $self->clear_file_tag_map;
     }
 
