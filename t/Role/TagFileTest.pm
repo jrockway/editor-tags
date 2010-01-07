@@ -70,8 +70,10 @@ role t::Role::TagFileTest with t::Role::WithTagCollection {
         is scalar @found_tags, scalar @expected_tags, 'got expected number of tags';
 
         for my $expected (@expected_tags){
-            my $got = $new->find_tag($expected->name);
-            is $got->name, $expected->name, 'found tag named '. $got->name. ' ok';
+            my $name = $expected->name;
+            my $got = $new->find_tag($name);
+            is $got->name, $expected->name, "$name - tag found in tags file ok";
+            is $got->associated_file, $expected->associated_file, "$name - tag is associated with correct file";
             $self->compare_tags($got, $expected);
         }
     }
