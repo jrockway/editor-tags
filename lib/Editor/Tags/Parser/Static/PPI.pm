@@ -140,7 +140,7 @@ class Editor::Tags::Parser::Static::PPI
                         offset          => $offset,
                         extra_info      => {
                             access    => ($name->literal =~ /^_/ ? 'private' : 'public'),
-                            signature => eval { $proto->literal } || '',
+                            signature => eval { $proto->content } || '',
                             kind      => $elt->literal,
                             file      => 1,
                         },
