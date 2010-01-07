@@ -7,8 +7,7 @@ class Editor::Tags::File::ETags {
 
     method _build_filename { 'TAGS' }
 
-    method new_from_file($class: File $file does coerce){
-        my $self = $class->new;
+    method parse_file(File $file){
         local $/ = "\x0c\n";
         my $fh = $file->openr;
         while (my $chunk = <$fh>){
@@ -28,7 +27,6 @@ class Editor::Tags::File::ETags {
                 );
             }
         }
-        return $self;
     }
 
     method build_formatted_tag(ClassName|Object $class: Tag $tag){

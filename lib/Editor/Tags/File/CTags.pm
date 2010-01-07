@@ -9,9 +9,7 @@ class Editor::Tags::File::CTags with Editor::Tags::File {
 
     method _build_filename { 'tags' }
 
-    method new_from_file($class: File $file does coerce){
-        my $self = $class->new;
-
+    method parse_file(File $file){
         if( $have_exuberant ) {
             my $parser = Parse::ExuberantCTags->new( $file->stringify );
             my $tag;
@@ -50,7 +48,6 @@ class Editor::Tags::File::CTags with Editor::Tags::File {
                 );
             }
         }
-        return $self;
     }
 
     method build_formatted_tag(ClassName|Object $class: Tag $tag) {

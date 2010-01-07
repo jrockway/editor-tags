@@ -2,21 +2,28 @@ use MooseX::Declare;
 
 role Editor::Tags::File with Editor::Tags::Collection {
     use MooseX::FileAttribute;
+    use MooseX::Types::Path::Class qw(File);
 
     has_file 'tags_file' => (
         builder => '_build_filename',
     );
 
-    requires 'new_from_file';
-    requires 'build_formatted_tag';
+    requires 'parse_file'; # (File $file)
+    requires 'build_formatted_tag'; # (Tag $tag)
 
-    method write_file {
+    method new_from_file($class: File $file does coerce){
+        my $self = $class->new( tags_file => $file );
+        $self->parse_file($file);
+        return $self;
+    }
+
+    method write_file() {
         my $tags = $self->tags_file->openw;
         $tags->print($self->build_file_contents);
         $tags->close;
     }
 
-    method build_file_contents {
+    method build_file_contents() {
         my $result;
         for my $file (sort $self->list_files){
             $result .= $self->build_one_file_block($file);
