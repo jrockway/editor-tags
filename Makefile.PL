@@ -10,4 +10,10 @@ requires 'MooseX::Types::Structured';
 requires 'PPI';
 requires 'Set::Object';
 
+requires 'Parse::ExuberantCTags'; # actually optional
+
+test_requires 'Test::Sweet';
+test_requires 'Directory::Scratch';
+test_requires 'Devel::Hide';
+
 WriteAll;

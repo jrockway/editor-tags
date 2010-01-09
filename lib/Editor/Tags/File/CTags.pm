@@ -31,6 +31,7 @@ class Editor::Tags::File::CTags with Editor::Tags::File {
         else {
             my $fh = $file->openr;
             while (my $line = <$fh>) {
+                chomp $line;
                 my ($name, $tag_file, $search) = split /\t/, $line;
 
                 my $line_no = Scalar::Util::looks_like_number($search) ? $search : 0;
