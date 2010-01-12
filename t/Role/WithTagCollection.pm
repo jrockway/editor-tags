@@ -1,7 +1,7 @@
 use MooseX::Declare;
 
 role t::Role::WithTagCollection {
-    use Editor::Tags::File;
+    use Editor::Tags::Collection;
 
     requires 'build_collection';
 

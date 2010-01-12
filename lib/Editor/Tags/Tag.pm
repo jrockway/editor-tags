@@ -1,6 +1,6 @@
 use MooseX::Declare;
 
-class Editor::Tags::Tag {
+class Editor::Tags::Tag with MooseX::Clone {
     use MooseX::FileAttribute;
     use MooseX::Types::Structured qw(Dict Optional);
     use MooseX::Types::Moose qw(Int Str Bool ArrayRef);
