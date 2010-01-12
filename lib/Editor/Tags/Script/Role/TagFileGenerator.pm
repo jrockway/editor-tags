@@ -59,7 +59,8 @@ role Editor::Tags::Script::Role::TagFileGenerator {
     method _get_output_instance {
         if($self->has_output_file){
             return $self->output_class->new(
-                tags_file => $self->output,
+                tags_file   => $self->output,
+                relative_to => Path::Class::dir('.')->absolute,
             );
         }
         else {
