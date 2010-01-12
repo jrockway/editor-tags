@@ -12,6 +12,8 @@ requires 'Set::Object';
 
 requires 'Parse::ExuberantCTags'; # actually optional
 
+requires 'App::Persistent'; # only needed for TagListSupport script
+
 test_requires 'Test::Sweet';
 test_requires 'Directory::Scratch';
 test_requires 'Devel::Hide';
